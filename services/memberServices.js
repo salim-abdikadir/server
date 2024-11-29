@@ -1,20 +1,20 @@
-const memberModel = require("../models/Member")
+const memberModel = require("../models/Member");
 
-exports.getAllMembers = ()=>{
-        return memberModel.findActive();
-}
+exports.getAllMembers = async () => {
+  return await memberModel.findActive();
+};
 
-exports.getMemberById = (id)=>{
-    return memberModel.findOneActive({_id:id});
-}   
+exports.getMemberById = async (id) => {
+  return await memberModel.findOneActive({ _id: id });
+};
 
-exports.createMember = (memberData)=>{
-    return memberModel.createActive(memberData)
-}
+exports.createMember = async (memberData) => {
+  return await memberModel.createActive(memberData);
+};
 
-exports.updateMebmer = (id, updatedData) =>{
-    return 'updated the member'
-}
-exports.deleteMember = (id) =>{
-    return 'deleted The member'
-}
+exports.updateMebmer = async (id, updatedData) => {
+  return await memberModel.updateOneActive({ _id: id }, updatedData);
+};
+exports.deleteMember = async (id) => {
+  return await memberModel.deleteOneActive({ _id: id });
+};

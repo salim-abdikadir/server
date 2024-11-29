@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-
+const User = require("../models/User");
 const Member = new mongoose.Schema(
   {
     firstName: {
@@ -63,16 +63,18 @@ const Member = new mongoose.Schema(
     createdby: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      required: true,
     },
-    updatedBy: {
+    updatedby: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      required: true,
     },
   },
   { timestamps: true }
 );
 const autoPopulateCreatedBy = function (next) {
-  this.populate("createdBy"); // Populate the `createdBy` field
+  this.populate("createdby").populate("updatedby"); // Populate the `createdBy` field
   next();
 };
 
@@ -83,19 +85,8 @@ Member.pre("findOneAndDelete", autoPopulateCreatedBy); // Populate for `findOneA
 Member.pre("findOneAndRemove", autoPopulateCreatedBy); // Populate for `findOneAndRemove`
 // Middleware to handle soft delete
 const handleSoftDelete = async function (next) {
-  // Instead of deleting, update `deletedAt` to `false`
-  const filter = this.getFilter(); // Get the query filter
-  const update = { deletedAt: Date.now() };
-
-  // Update the `deletedAt` field for the matched document(s)
-  await this.model.updateMany(filter, update);
-
-  // Prevent the actual delete operation
-  next(
-    new Error(
-      "Soft delete operation completed. Document(s) are marked as inactive."
-    )
-  );
+  // Instead of deleting, update `deletedAt` to `Date.now()`
+  next();
 };
 
 // Apply `pre` middleware for delete operations
@@ -119,7 +110,10 @@ Member.statics.updateOneActive = async function (
   update = {},
   options = {}
 ) {
-  return this.updateOne({ deletedAt: null, ...filter }, update, options);
+  return await this.findOneAndUpdate({ deletedAt: null, ...filter }, update, {
+    new: true,
+    ...options,
+  });
 };
 
 // Static method for updating multiple active documents
@@ -128,22 +122,33 @@ Member.statics.updateManyActive = async function (
   update = {},
   options = {}
 ) {
-  return this.updateMany({ deletedAt: null, ...filter }, update, options);
+  await this.updateMany({ deletedAt: null, ...filter }, update, options);
+  const documents = await this.find(filter);
+  return documents;
 };
 
 // Static method for deleting one active document (soft delete)
 Member.statics.deleteOneActive = async function (filter = {}) {
-  return this.updateOne({ deletedAt: null, ...filter }, { deletedAt: false });
+  return this.findOneAndUpdate(
+    { deletedAt: null, ...filter },
+    { deletedAt: Date.now() },
+    { new: true }
+  );
 };
 
 // Static method for deleting multiple active documents (soft delete)
 Member.statics.deleteManyActive = async function (filter = {}) {
-  return this.updateMany({ deletedAt: null, ...filter }, { deletedAt: false });
+  const documents = await this.find(filter);
+  await this.updateMany(
+    { deletedAt: null, ...filter },
+    { deletedAt: Date.now() }
+  );
+  return documents;
 };
 
 // Static method for creating a document
 Member.statics.createActive = async function (data) {
-  return this.create({ deletedAt: null, ...data });
+  return await this.create({ deletedAt: null, ...data });
 };
 
 module.exports = mongoose.model("Member", Member);
