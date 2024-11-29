@@ -31,3 +31,13 @@ exports.login = async (req, res) => {
   if (token) res.json({ data: token });
   else res.status(400).json({ msg: "invalid password or username" });
 };
+
+
+exports.getAllUsers = async(req,res)=>{
+  try{
+    const allusers =  await userServices.getAll();
+    res.json({users:allusers})
+  }catch(err){
+    res.status(501).json({error:true,msg:err.message})
+  }
+}

@@ -3,9 +3,8 @@ const userControl = require("../controls/userControl");
 const authHandler = require("../handlers/authHandling");
 const router = express.Router();
 
-router.get("/", authHandler, (req, res) => {
-  res.json({ msg: "hi you passed the login" });
-});
+//TODO: Dont forget to add the authentication middleware
+router.get("/", userControl.getAllUsers);
 router.post("/login", userControl.login);
 router.post("/", userControl.registerUser);
 

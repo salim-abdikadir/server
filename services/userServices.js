@@ -22,3 +22,11 @@ exports.loginUser = async (user) => {
     // for production
   }
 };
+
+exports.getAll = async()=>{
+  try{
+    return await User.find().populate("createdBy");
+  }catch(err){
+    return err;
+  }
+}
