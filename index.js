@@ -94,7 +94,7 @@ module.exports = function main(options, cb) {
     serverStarted = true;
     const addr = server.address();
     logger.info(
-      `Started at ${opts.host || addr.host || "localhost"}:${addr.port}`
+      `Started at ${addr.host || "localhost"}:${addr.port}`
     );
     ready(err, app, server);
   });
