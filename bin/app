@@ -1,8 +1,8 @@
 #! /usr/bin/env node
-'use strict'
+"use strict";
 
 // Pass configuration to application
-require('../')({
-  port: 8000,
-  host: 'localhost'
-})
+require("../")({
+  port: process.env.PORT || 10000,
+  host: "localhost",
+});
