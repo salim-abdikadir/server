@@ -10,7 +10,7 @@ exports.login = async (user) => {
       if (await bcrypt.compare(user.password, loggedUser.password)) {
         const token = jwt.sign({ _id: loggedUser._id }, "secret");
         const username = loggedUser.username;
-        return { token, username };
+        return { token, username, id: loggedUser._id };
       }
     }
   } catch (err) {

@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const User = require("../models/User");
+const Payment = require("./Payment");
 const Member = new mongoose.Schema(
   {
     firstName: {
@@ -28,7 +29,7 @@ const Member = new mongoose.Schema(
       required: [true, "phone is required"],
       unique: [true, "phone must be unique"],
       trim: true,
-      minlength: [7, "phone must be at least 4 characters long"],
+      minlength: [7, "phone must be at least 7 characters long"],
       maxlength: [10, "phone cannot exceed 10 characters"],
     },
     address: {
@@ -48,7 +49,7 @@ const Member = new mongoose.Schema(
     },
     shift: {
       type: String,
-      enum: ["morning", "afternoon", "evening"],
+      enum: ["Morning", "Afternoon", "Evening"],
       required: [true, "the shift is required"],
     },
     deletedAt: {
@@ -73,8 +74,19 @@ const Member = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+Member.virtual('latestPayment', {
+  ref: 'Payment', // Reference to the Payment model
+  localField: '_id', // Field in User schema
+  foreignField: 'member', // Field in Payment schema
+  justOne: true, // Ensure only one document is returned
+  options: { sort: { createdAt: -1 } }, // Sort by date descending to get the latest payment
+});
+Member.set("toObject", { virtuals: true });
+Member.set("toJSON", { virtuals: true });
+
 const autoPopulateCreatedBy = function (next) {
-  this.populate("createdby").populate("updatedby"); // Populate the `createdBy` field
+  this.populate("createdby").populate("updatedby").populate("latestPayment") // Populate the `createdBy` field
   next();
 };
 
@@ -96,12 +108,17 @@ Member.pre("deleteMany", handleSoftDelete);
 
 // Static method for finding all active documents
 Member.statics.findActive = async function (filter = {}) {
-  return this.find({ deletedAt: null, ...filter });
+  const documents = await this.find({ deletedAt: null, ...filter });
+  return documents;
 };
 
 // Static method for finding one active document
 Member.statics.findOneActive = async function (filter = {}) {
-  return this.findOne({ deletedAt: null, ...filter });
+  const document = await this.findOne({
+    deletedAt: null,
+    ...filter,
+  });
+  return document;
 };
 
 // Static method for updating one active document

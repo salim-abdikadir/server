@@ -6,7 +6,8 @@ const uri = process.env.MONGODB_URI;
 const clientOptions = {
   serverApi: { version: "1", strict: true, deprecationErrors: true },
 };
-
+mongoose.set("toJSON", { getters: true });
+mongoose.set("toObject", { getters: true });
 async function connect() {
   try {
     // Create a Mongoose client with a MongoClientOptions object to set the Stable API version
